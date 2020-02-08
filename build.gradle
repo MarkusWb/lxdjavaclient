@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id 'maven'
+    id 'application'
+}
+
+group 'de.axxepta'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+mainClassName = 'de.axxepta.lxdjavaclient.App'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    releaseJars
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    compile 'org.apache.httpcomponents:httpclient:4.5.11'
+    compile 'com.sparkjava:spark-core:2.9.1'
+
+    releaseJars 'org.apache.httpcomponents:httpclient:4.5.11'
+    releaseJars 'com.sparkjava:spark-core:2.9.1'
+}
+
+task copyToLib( type: Copy ) {
+    into "$buildDir/libs/lib"
+    from configurations.releaseJars
+}
+
+jar {
+    dependsOn copyToLib
+    manifest {
+        attributes('Main-Class': 'de.axxepta.lxdjavaclient.App')
+    }
+}
+
+task fatJar(type: Jar) {
+    baseName = project.name + '-all'
+    manifest {
+        attributes('Main-Class': 'de.axxepta.lxdjavaclient.App')
+    }
+    doFirst {
+        from { configurations.releaseJars.collect { it.isDirectory() ? it : zipTree(it) } }
+    }
+    with jar
+}
